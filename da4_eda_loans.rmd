@@ -1,0 +1,235 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+install.packages('ggplot2')
+```
+#The data
+
+This data set contains 113,937 loans with 81 variables on each loan, including loan amount, borrower rate (or interest rate), current loan status, borrower income, borrower employment status, borrower credit history, and the latest payment information.
+
+//TODO Explorte 10 - 15 Variables
+
+```{r}
+library(ggplot2)
+
+loanData <- read.csv('prosperLoanData.csv')
+summary(loanData)
+
+```
+# First Look
+In this data set there are 81 Variables. To Start the most interresting for me seem to be
+# https://www.prosper.com/Downloads/Services/Documentation/ProsperDataExport_Details.html
+
+
+What?
+* LoanOriginalAmount
+* Term: The length of the loan expressed in months.
+* Loan Origin Date
+
+Who?
+* isBorrowerHomeOwner
+* Occupation
+* CreditGrade
+* CurrentDelinquencies
+
+Why?
+* ListingCategory: numeric 
+** The category of the listing that the borrower selected when posting their listing: 0 - Not Available, 1 - Debt Consolidation, 2 - Home Improvement, 3 - Business, 4 - Personal Loan, 5 - Student Use, 6 - Auto, 7- Other, 8 - Baby&Adoption, 9 - Boat, 10 - Cosmetic Procedure, 11 - Engagement Ring, 12 - Green Loans, 13 - Household Expenses, 14 - Large Purchases, 15 - Medical/Dental, 16 - Motorcycle, 17 - RV, 18 - Taxes, 19 - Vacation, 20 - Wedding Loans
+
+* BankcardUtilization
+* IncomeRange
+* EmploymentStatus
+
+Help from Friends?
+* InvestementFromFriendsAmount
+* Investors
+
+Is your credit rate ok?
+*BorrowerAPR: The Borrower's Annual Percentage Rate (APR) for the loan.
+*BorrowerRate: The Borrower's interest rate for this loan. The is the rate the borrower pays if the loan were to close at this point in time. The rate is computed as the LenderRate + GroupLeaderRewardRate (if applicable) + BankDraftFeeAnnualRate (if applicable).
+
+*ProsperScore: A custom risk score built using historical Prosper data. The score ranges from 1-10, with 10 being the best, or lowest risk score. Applicable for loans originated after July 2009.
+
+
+LoanOriginalAmount and Terms by Year
+- extract the year of the LoanOriginData and save it to a new variable 
+```{r}
+```
+
+#How much money is needed?
+```{r}
+
+ggplot(aes(x = LoanOriginalAmount), data = loanData) + 
+  geom_histogram( fill = ('#F79420')) 
+
+```
+```{r}
+summary(loanData$LoanOriginalAmount)
+```
+
+
+Most of loans are under 5000,--. I suggest the money is needed for sonderausgaben, die im Haushaltsbudget keinen Platz mehr gefunden haben. Möglicherweise Schäden im Haushalt oder Sonderausgaben aufgrund von unvorhersehbaren Umständen. Unfälle...
+
+Sehen wir uns nun an, für was das Geld benötigt wurde. -> unsere Annahme bestägigen
+```{r loans by category }
+# transform the numeric value of categories to readable names:
+
+loanData$Category[loanData$ListingCategory..numeric. == '0'] <- 'Not Availabe'
+loanData$Category[loanData$ListingCategory..numeric. == '1'] <- 'Debt Consolidation'
+loanData$Category[loanData$ListingCategory..numeric. == '2'] <- 'Home Improvement'
+loanData$Category[loanData$ListingCategory..numeric. == '3'] <- 'Business'
+loanData$Category[loanData$ListingCategory..numeric. == '4'] <- 'Personal Loan'
+loanData$Category[loanData$ListingCategory..numeric. == '5'] <- 'Student Use'
+loanData$Category[loanData$ListingCategory..numeric. == '6'] <- 'Auto'
+loanData$Category[loanData$ListingCategory..numeric. == '7'] <- 'Other'
+loanData$Category[loanData$ListingCategory..numeric. == '8'] <- 'Baby & Adoption'
+loanData$Category[loanData$ListingCategory..numeric. == '9'] <- 'Boat'
+loanData$Category[loanData$ListingCategory..numeric. == '10'] <- 'Cosmetic Procedure'
+loanData$Category[loanData$ListingCategory..numeric. == '11'] <- 'Engagement Ring'
+loanData$Category[loanData$ListingCategory..numeric. == '12'] <- 'Green Loans'
+loanData$Category[loanData$ListingCategory..numeric. == '13'] <- 'Household Expenses'
+loanData$Category[loanData$ListingCategory..numeric. == '14'] <- 'Large Purchases'
+loanData$Category[loanData$ListingCategory..numeric. == '15'] <- 'Medical/Dental'
+loanData$Category[loanData$ListingCategory..numeric. == '16'] <- 'Motorcycle'
+loanData$Category[loanData$ListingCategory..numeric. == '17'] <- 'RV'
+loanData$Category[loanData$ListingCategory..numeric. == '18'] <- 'Taxes'
+loanData$Category[loanData$ListingCategory..numeric. == '19'] <- 'Vacation'
+loanData$Category[loanData$ListingCategory..numeric. == '20'] <- 'Wedding Loans'
+
+```
+
+
+```{r}
+summary(loanData$Occupation)
+
+```
+
+WHy?
+```{r}
+reorder_size <- function(x) {
+  factor(x, levels = names(sort(table(x))))
+}
+
+ggplot(data= subset(loanData, LoanOriginalAmount > 2500 & LoanOriginalAmount <= 9000), aes(reorder_size(Category))) +
+    geom_bar(colour = "green")+
+    ggtitle("Amount of loans by category") +
+  theme(axis.text.x=element_text(angle=45,hjust=1,vjust=0.5))+
+    labs(x="", y = "Number of loans") +
+  coord_flip()
+
+ggplot(data=loanData, x=Occupation, aes(reorder_size(Occupation))) +
+    geom_bar(width= 5, colour = "green", stats="count")+
+    ggtitle("Borrowers by Occupation")
+    labs(x="", y = "Number of loans") +
+  coord_flip()
+
+
+```
+As the most categories are debt consolidation, not availabe and other we cant really tell if it is like suggested. The data is not complete. But mostly money is needed for household expenses or home improvement. 
+WHO?
+
+```{r}
+
+
+```
+
+
+In the next step I want to proof the people who aren t house owners need more often small loans for Vacation, HomeImprovement or Household Expenses.
+
+```{r}
+summary(loanData$IsBorrowerHomeowner)
+```
+
+house owner need less credits
+NEXt: limit to smaller amount of loan and check if loan taker is a house owner
+```{r}
+
+ggplot(data=loanData, aes(IsBorrowerHomeowner)) +
+    geom_bar(colour = "green")+
+    ggtitle("Is borrower homeowner") +
+  theme(axis.text.x=element_text(angle=45,hjust=1,vjust=0.5))+
+  coord_flip()
+```
+```{r}
+
+
+ggplot(aes(x = IsBorrowerHomeowner, y = LoanOriginalAmount),
+      data = loanData) +
+      stat_summary(fun.y = mean, geom= 'point', shape = 4)
+
+ggplot(aes(x=IncomeRange, y = LoanOriginalAmount),
+       data = loanData) +
+      theme(axis.text.x=element_text(angle=45,hjust=1,vjust=0.5))+
+
+  geom_line(aes(color= IsBorrowerHomeowner))
+
+
+#ggplot(aes(x= IncomeRange, y = LoanOriginalAmount),
+#       data = loanData) +
+#  geom_line(stat = 'summary')
+
+
+```
+```{r}
+  qplot(x=IsBorrowerHomeowner, y=LoanOriginalAmount,
+        data=loanData, geom = 'boxplot') +
+  scale_y_continuous(limits = c(1000, 20000))
+```
+
+
+#relation between prosper rate and houseOwner
+```{r}
+
+qplot(x=IsBorrowerHomeowner, y=ProsperScore,
+        data=loanData, geom = 'boxplot') +
+  scale_y_continuous()
+```
+
+
+
+#check if homeowner have a better Prosperscore
+#Prosper A custom risk score built using historical Prosper data. The score ranges from 1-10, with 10 being the best, or lowest risk score.
+
+#BorrowerRate: The is the rate the borrower pays if the loan were to close at this point in time. The rate is computed as the LenderRate + GroupLeaderRewardRate (if applicable) + BankDraftFeeAnnualRate (if applicable).
+
+
+```{r}
+#prosper score -> house owners have a better one
+ggplot(aes(x=BorrowerRate, y=ProsperScore),
+         data = loanData)+
+  geom_line()+
+  geom_smooth()
+
+
+```
+
+
+#byIncomeRAnge..
+
+
+
+
+When was the money needed?
+
+```{r Loans over time}
+loanData$LoanOriginationYear <- format(as.Date(loanData$LoanOriginationDate, format="%Y-%m-%d"),"%Y")
+
+ggplot(aes(x = LoanOriginationYear, y = LoanOriginalAmount, fill=Term, group=LoanOriginationYear), data =loanData) +
+    geom_bar(aes(group = LoanOriginationYear), position='dodge', stat='identity')+
+    ggtitle("Loans by Year") +
+    labs(x="Loan origination year", y = "Loan original amount")
+```
+
+# what happenend in 2011?
+
+
+nExt: 
+
+
+#Problems
+-Convert Origin Date to only the year..
+-Map Readable values to Category numeric..
+
+
