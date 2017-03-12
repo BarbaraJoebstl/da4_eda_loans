@@ -1,5 +1,8 @@
 ---
-title: "EDA for Loan Data by Barbara Joebstl"
+title: "Exploratory Data Analysis for Loan Data"
+author: "Barbara Joebstl"
+date: "12 March 2017"
+output: html_document
 ---
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, packages}
@@ -11,106 +14,147 @@ library(dplyr)
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 loans <- read.csv('prosperloanData.csv')
-head(loans)
+#head(loans)
 ```
 
 #Loan data
-In this project we are analysing a dataset from the company Prosper, who is part of the peer-to-peer lending industry.
+In this project we are analysing a dataset from the company Prosper, who is part
+of the peer-to-peer lending industry.
 
 # Univariate Plots Section
-In this section we will preform prelaiminary exploration of
-the dataset to get an understanding ot the structure and the indivual variables in the loan dataset.
+In this section we will preform prelaiminary exploration of the dataset to get an understanding ot the structure and the indivual variables in the loan dataset.
 
 ```{r, echo=FALSE, Univariate_Plot_1, message=FALSE, warning=FALSE}
 ggplot(aes(x = LoanOriginalAmount), data = loans) + 
   geom_histogram(color = ('#24323e'), fill = ('#02ccba')) +
+  xlab('Loan Original Amount (USD)') +
   ggtitle('Histogram of original loan amount')
 
+"Summary of Loan Original Amaount(USD):"
 summary(loans$LoanOriginalAmount)
 ```
 
 The loan orginial amount is the amount that was bid.
-The median of the loans is 6500. I suggest the money is needed for extra expenses due to unexpected problems, like home improvements or taking a small loan for a holiday. It seems the loans above 25000 are not often needed. So we will perform an outlier check.
+The median of the loans is 6500. I suggest the money is needed for extra expenses
+due to unexpected problems, like home improvements or taking a small loan for a 
+holiday. It seems the loans above 25000 are not often needed. So we will perform 
+an outlier check.
 
 ```{r, echo=FALSE, Univariate_Plot_2, message=FALSE, warning=FALSE}
 
-#script to detect outliers - source: https://www.r-bloggers.com/identify-describe-plot-and-remove-the-outliers-from-the-dataset/
+#script to detect outliers - source: 
+#https://www.r-bloggers.com/
+#identify-describe-plot-and-remove-the-outliers-from-the-dataset
 outlierKD <- function(dt, var) {
-     var_name <- eval(substitute(var),eval(dt))
-     na1 <- sum(is.na(var_name))
-     m1 <- mean(var_name, na.rm = T)
-     par(mfrow=c(2, 2), oma=c(0,0,3,0))
-     boxplot(var_name, main="With outliers")
-     hist(var_name, main="With outliers", xlab=NA, ylab=NA)
-     outlier <- boxplot.stats(var_name)$out
-     mo <- mean(outlier)
-     var_name <- ifelse(var_name %in% outlier, NA, var_name)
-     boxplot(var_name, main="Without outliers")
-     hist(var_name, main="Without outliers", xlab=NA, ylab=NA)
-     title("Outlier Check", outer=TRUE)
-     na2 <- sum(is.na(var_name))
-     cat("Outliers identified:", na2 - na1, "n")
-     cat("Propotion (%) of outliers:", round((na2 - na1) / sum(!is.na(var_name))*100, 1), "n")
-     cat("Mean of the outliers:", round(mo, 2), "n")
-     m2 <- mean(var_name, na.rm = T)
-     cat("Mean without removing outliers:", round(m1, 2), "n")
-     cat("Mean if we remove outliers:", round(m2, 2), "n")
-     response <- readline(prompt="Do you want to remove outliers and to replace with NA? [yes/no]: ")
-     if(response == "y" | response == "yes"){
-          dt[as.character(substitute(var))] <- invisible(var_name)
-          assign(as.character(as.list(match.call())$dt), dt, envir = .GlobalEnv)
-          cat("Outliers successfully removed", "n")
-          return(invisible(dt))
-     } else{
-          cat("Nothing changed", "n")
-          return(invisible(var_name))
-     }
+  var_name <- eval(substitute(var),eval(dt))
+  na1 <- sum(is.na(var_name))
+  m1 <- mean(var_name, na.rm = T)
+  par(mfrow=c(2, 2), oma=c(0,0,3,0))
+  boxplot(var_name, main="With outliers")
+  hist(var_name, main="With outliers", xlab=NA, ylab=NA)
+  outlier <- boxplot.stats(var_name)$out
+  mo <- mean(outlier)
+  var_name <- ifelse(var_name %in% outlier, NA, var_name)
+  boxplot(var_name, main="Without outliers")
+  hist(var_name, main="Without outliers", xlab=NA, ylab=NA)
+  title("Outlier Check", outer=TRUE)
+  na2 <- sum(is.na(var_name))
+  cat("Outliers identified:", na2 - na1, "n")
+  cat("Propotion (%) of outliers:",
+      round((na2 - na1) / sum(!is.na(var_name))*100, 1), "n")
+  cat("Mean of the outliers:", round(mo, 2), "n")
+  m2 <- mean(var_name, na.rm = T)
+  cat("Mean without removing outliers:", round(m1, 2), "n")
+  cat("Mean if we remove outliers:", round(m2, 2), "n")
+  response <- readline(
+    prompt="Do you want to remove outliers and to replace with NA? [yes/no]: ")
+  if(response == "y" | response == "yes"){
+    dt[as.character(substitute(var))] <- invisible(var_name)
+    assign(as.character(as.list(match.call())$dt), dt, envir = .GlobalEnv)
+    cat("Outliers successfully removed", "n")
+    return(invisible(dt))
+  } else{
+    cat("Nothing changed", "n")
+    return(invisible(var_name))
+  }
 }
 
 outlierKD(loans, LoanOriginalAmount)
 ```
 
-There are 4395 outliers identified from the 113937 data objects. We will first replace the outliers with NA values and then create a new filtered data frame without the outliers.
+There are 4395 outliers identified from the 113937 data objects. We will first 
+replace the outliers with NA values and then create a new filtered data frame 
+without the outliers.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 loans_filtered <- loans[!with(loans,is.na(LoanOriginalAmount)),]
 ```
 
 ```{r, echo=FALSE, Univariate_Plot_3}
-ggplot(aes(x = Term), data = loans_filtered) + 
-  geom_histogram(color = ('#24323e'), fill = ('#02ccba')) +
-  ggtitle('Terms in month')
+"Summary of Terms:"
+summary(loans_filtered$Term)
 
-summary(loans$Term)
+loans_filtered$Term <- factor(loans_filtered$Term,
+                              levels=c(12,36,60),
+                              ordered=TRUE)
+
+ggplot(aes(x = Term), data = loans_filtered) + 
+  geom_bar(color = ('#24323e'), fill = ('#02ccba')) +
+  xlab('Terms in month') +
+  ggtitle('Terms')
 ```
 
-The loan taker can choose between a 12, 36 or 60 month long term. In the plot above we can see that most of the loans are taken with a term of 36 month.
+The loan takers can choose between a 12, 36 or 60 month long term. In the plot
+above we can see that most of the loans are taken with a term of 36 month.
 
-To get a better readability, we are going to map the numeric values to better readable strings according to this site: https://www.prosper.com/Downloads/Services/Documentation/ProsperDataExport_Details.html
+To get a better readability, we are going to map the numeric values to better
+readable strings according to this site: 
+https://www.prosper.com/Downloads/Services/Documentation/ProsperDataExport_Details.html
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 #transform the numeric value of categories to readable names--------------
-loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '0'] <- 'Not Available'
-loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '1'] <- 'Debt Consolidation'
-loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '2'] <- 'Home Improvement'
-loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '3'] <- 'Business'
-loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '4'] <- 'Personal Loan'
-loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '5'] <- 'Student Use'
-loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '6'] <- 'Auto'
-loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '7'] <- 'Other'
-loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '8'] <- 'Baby & Adoption'
-loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '9'] <- 'Boat'
-loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '10'] <- 'Cosmetic Procedure'
-loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '11'] <- 'Engagement Ring'
-loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '12'] <- 'Green Loans'
-loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '13'] <- 'Household Expenses'
-loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '14'] <- 'Large Purchases'
-loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '15'] <- 'Medical/Dental'
-loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '16'] <- 'Motorcycle'
-loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '17'] <- 'RV'
-loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '18'] <- 'Taxes'
-loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '19'] <- 'Vacation'
-loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '20'] <- 'Wedding Loans'
+loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '0'] <- 
+'Not Available'
+loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '1'] <- 
+'Debt Consolidation'
+loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '2'] <-
+'Home Improvement'
+loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '3'] <-
+'Business'
+loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '4'] <-
+'Personal Loan'
+loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '5'] <-
+'Student Use'
+loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '6'] <-
+'Auto'
+loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '7'] <-
+'Other'
+loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '8'] <-
+'Baby & Adoption'
+loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '9'] <-
+'Boat'
+loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '10'] <-
+'Cosmetic Procedure'
+loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '11'] <-
+'Engagement Ring'
+loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '12'] <-
+'Green Loans'
+loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '13'] <-
+'Household Expenses'
+loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '14'] <-
+'Large Purchases'
+loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '15'] <-
+'Medical/Dental'
+loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '16'] <-
+'Motorcycle'
+loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '17'] <-
+'RV'
+loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '18'] <-
+'Taxes'
+loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '19'] <-
+'Vacation'
+loans_filtered$Category[loans_filtered$ListingCategory..numeric. == '20'] <-
+'Wedding Loans'
 ```
 
 ```{r, echo=FALSE, Univariate_Plots_4, message=FALSE, warning=FALSE}
@@ -120,133 +164,154 @@ reorder_size <- function(x) {
 
 ggplot(data = loans_filtered,
        aes(reorder_size(Category))) +
-      geom_bar(colour='#24323e', fill='#02ccba')+
-      ggtitle("Amount of loans by category") +
-      theme(axis.text.x=element_text(angle=45,hjust=1,vjust=0.5))+
-      labs(x="", y = "Number of loans") +
-      coord_flip()
+  geom_bar(colour='#24323e', fill='#02ccba')+
+  ggtitle("Amount of loans by category") +
+  theme(axis.text.x=element_text(angle=45,hjust=1,vjust=0.5))+
+  labs(x="", y = "Number of loans") +
+  coord_flip()
 ```
 
-As we can see in the plot above the most loans are needed for the categories "Debt Consolidation", "Not Available" and "Other". So it seems loan takers do not want to tell the purpose of their loans.
+As we can see in the plot above the most loans are needed for the categories
+"Debt Consolidation", "Not Available" and "Other". So it seems loan takers do
+not want to tell the purpose of their loans.
 
-We will make another plot where we skip those categories, to take a closer look at the other categories.
+We will make another plot where we skip those categories, to take a closer look
+at the other categories.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 reorder_size <- function(x) {
   factor(x, levels = names(sort(table(x))))
 }
 
-ggplot(data = subset(loans_filtered,
-                    LoanOriginalAmount > 2500
-                    & LoanOriginalAmount <= 9000
-                    & Category != 'Debt Consolidation'
-                    & Category != 'Not Available'
-                    & Category != 'Other'),
-       aes(reorder_size(Category))) +
-      geom_bar(colour='#24323e', fill='#02ccba')+
-      ggtitle("Amount of loans by category without 'OTHER'") +
-      theme(axis.text.x=element_text(angle=45,hjust=1,vjust=0.5)) +
-      labs(x="", y = "Number of loans") +
-      coord_flip()
+ggplot(
+  data = subset(
+    loans_filtered,
+    LoanOriginalAmount > 2500
+    & LoanOriginalAmount <= 9000
+    & Category != 'Debt Consolidation'
+    & Category != 'Not Available'
+    & Category != 'Other'
+  ),
+  aes(reorder_size(Category))
+) +
+  geom_bar(colour = '#24323e', fill = '#02ccba') +
+  ggtitle("Amount of loans by category without 'OTHER'") +
+  theme(axis.text.x = element_text(
+    angle = 45,
+    hjust = 1,
+    vjust = 0.5
+  )) +
+  labs(x = "", y = "Number of loans") +
+  coord_flip()
 ```
 
+We can see that now the most popular purposes are  "Home Improvement", "Business"
+and "Auto". 
+
+### Occupation of loan takers
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
+"Head of Occupation Data:"
 head(loans_filtered$Occupation)
 ```
 
-Because there are 68 different types of occupation we are going to combine groups into a new data frame into bigger occupation groups.
+Because there are 68 different types of occupation we are going to combine groups
+into a new data frame into bigger occupation groups.
 
 ```{r, echo=FALSE, Univariate_Plots_5, message=FALSE, warning=FALSE}
 #summarize different occupations into grouped occupations----------------
 loans_filtered$GroupedOccupation <- factor(loans_filtered$Occupation)
 levels(loans_filtered$GroupedOccupation) <- list(
   Student=c("Student - College Graduate Student",
-"Student - College Senior", 
-"Student - Community College",
-"Student - College Freshman",
-"Student - College Junior",
-"Student - College Sophomore",
-"Student - Technical School"), 
-Medical_Health=c("Doctor", "Nurse's Aide",
-                 "Nurse (RN)",
-                 "Nurse (LPN)",
-                 "Dentist",
-                 "Pharmacist",
-                 "Medical Technician",
-                 "Psychologist"),
-Sales=c("Sales - Commission",
-        "Sales - Retail",
-        "Car Dealer",
-        "Realtor"),
-Service=c("Food Service Management",
-          "Food Service",
-          "Postal Service",
-          "Social Worker",
-          "Truck Driver",
-          "Bus Driver",
-          "Retail Management",
-          "Waiter/Waitress",
-          "Flight Attendant",
-          "Clerical",
-          "Religious",
-          "Clergy"),
-Laborer=c("Construction",
-          "Laborer",
-          "Skilled Labor",
-          "Landscaping",
-          "Homemaker",
-          "Fireman",
-          "Executive",
-          "Teacher's Aide",
-          "Computer Programmer",
-          "Administrative Assistant",
-          "Professional",
-          "Accountant/CPA",
-          "Tradesman - Carpenter",
+            "Student - College Senior", 
+            "Student - Community College",
+            "Student - College Freshman",
+            "Student - College Junior",
+            "Student - College Sophomore",
+            "Student - Technical School"), 
+  Medical_Health=c("Doctor", "Nurse's Aide",
+                   "Nurse (RN)",
+                   "Nurse (LPN)",
+                   "Dentist",
+                   "Pharmacist",
+                   "Medical Technician",
+                   "Psychologist"),
+  Sales=c("Sales - Commission",
+          "Sales - Retail",
+          "Car Dealer",
+          "Realtor"),
+  Service=c("Food Service Management",
+            "Food Service",
+            "Postal Service",
+            "Social Worker",
+            "Truck Driver",
+            "Bus Driver",
+            "Retail Management",
+            "Waiter/Waitress",
+            "Flight Attendant",
+            "Clerical",
+            "Religious",
+            "Clergy"),
+  Laborer=c("Construction",
+            "Laborer",
+            "Skilled Labor",
+            "Landscaping",
+            "Homemaker",
+            "Fireman",
+            "Executive",
+            "Teacher's Aide",
+            "Computer Programmer",
+            "Administrative Assistant",
+            "Professional",
+            "Accountant/CPA",
+            "Tradesman - Carpenter",
             "Tradesman - Mechanic",
             "Tradesman - Electrician",
             "Tradesman - Plumber",
-          "Pilot - Private/Commercial"),
-HigherEdJobs=c("Architect",
-               "Biologist",
-               "Engineer - Electrical",
-               "Engineer - Mechanical",
-               "Engineer - Chemical",
-               "Judge", "Teacher",
-               "Scientist",
-               "Professor",
-               "Attorney", "Analyst", "Accountant/CPA"
-               ),
-CivilService=c("Civil Service",
-               "Military Officer",
-               "Police Officer/Correction Officer",
-               "Military Enlisted"),
-Other=c("Other", "")
+            "Pilot - Private/Commercial"),
+  HigherEdJobs=c("Architect",
+                 "Biologist",
+                 "Engineer - Electrical",
+                 "Engineer - Mechanical",
+                 "Engineer - Chemical",
+                 "Judge", "Teacher",
+                 "Scientist",
+                 "Professor",
+                 "Attorney", "Analyst", "Accountant/CPA"
+  ),
+  CivilService=c("Civil Service",
+                 "Military Officer",
+                 "Police Officer/Correction Officer",
+                 "Military Enlisted"),
+  Other=c("Other", "")
 )
 
-ggplot(data=subset(loans_filtered, GroupedOccupation != 'Other' & !is.na(GroupedOccupation)), x=GroupedOccupation, aes(reorder_size(GroupedOccupation))) +
-    geom_bar(colour='#24323e', fill='#02ccba')+
-    ggtitle("Borrowers by Occupation") +
-    labs(x="", y = "Number of loans") +
-    theme(axis.text.x=element_text(angle=45,hjust=1,vjust=0.5))
+ggplot(data=subset(loans_filtered,
+                   GroupedOccupation != 'Other' &
+                   !is.na(GroupedOccupation)),
+       x=GroupedOccupation, aes(reorder_size(GroupedOccupation))) +
+  geom_bar(colour='#24323e', fill='#02ccba')+
+  ggtitle("Borrowers by Occupation") +
+  labs(x="", y = "Number of loans") +
+  theme(axis.text.x=element_text(angle=45,hjust=1,vjust=0.5))
 ```
-
 
 ```{r, echo=FALSE, Univariate_Plots_6, message=FALSE, warning=FALSE}
 ggplot(aes(x = IsBorrowerHomeowner), data = loans_filtered) + 
   geom_bar(color = ('#24323e'), fill = ('#02ccba')) +
   ggtitle('Home owner')
 
+"Summary of Home Owners:"
 summary(loans_filtered$IsBorrowerHomeowner)
 ```
 
-Almost the same amount of loan takers ar home owners. Because we filtered out the top outliers from the loan original amount, we can see that slightly more non home owners need a loan.
+Almost the same amount of loan takers ar home owners.
 
 ```{r, echo=FALSE, Univariate_Plots_7, message=FALSE, warning=FALSE}
 ggplot(aes(x = ProsperScore), data = loans_filtered) + 
   geom_bar(color = ('#24323e'), fill = ('#02ccba')) +
   ggtitle('Prosper score')
 
+"Summary of Prosper Score:"
 summary(loans_filtered$ProsperScore)
 ```
 
@@ -261,19 +326,20 @@ The plot above shows that there is most of the data for credit grade missing.
 ```{r, echo=FALSE, Univariate_Plots_9, message=FALSE, warning=FALSE}
 ggplot(aes(x = EmploymentStatusDuration), data = loans_filtered) + 
   geom_histogram(color = ('#24323e'), fill = ('#02ccba')) +
-  ggtitle('Employment status duration in months')
+  xlab('Employment status duration in months') +
+  ggtitle('Employment status duration')
 ```
 
 We can see that the longer people have an employment the less they need a loan. 
 
 ```{r, echo=FALSE, Univariate_Plots_10, message=FALSE, warning=FALSE}
 ggplot(data = loans_filtered, aes(x = DebtToIncomeRatio)) +                
-        geom_histogram(colour = '#24323e', fill = '#02ccba', binwidth = 0.005) +
-        xlim(0, quantile(loans_filtered$DebtToIncomeRatio, prob = 0.5, na.rm = TRUE)) +
-        ggtitle("Debt To Income Ratio") +
-        xlab("Debt to Income Ratio") +
-        ylab("Count")
-        summary(loans_filtered$loan_income_ratio)
+  geom_histogram(colour = '#24323e', fill = '#02ccba', binwidth = 0.005) +
+  xlim(0, quantile(loans_filtered$DebtToIncomeRatio,
+                   prob = 0.5, na.rm = TRUE)) +
+  ggtitle("Debt To Income Ratio") +
+  xlab("Debt to Income Ratio") +
+  ylab("Count")
 ``` 
 
 ```{r, echo=FALSE, Univariate_Plots_11, message=FALSE, warning=FALSE}
@@ -283,63 +349,93 @@ ggplot(aes(x = LenderYield), data = loans_filtered) +
 ```
 
 ```{r, echo=FALSE, Univariate_Plots_12, message=FALSE, warning=FALSE}
-ggplot(aes(x = loans_filtered$Investors, y = ..count..), data = loans_filtered) +
-  geom_freqpoly(aes(color = Investors), binwidth=0.1) + 
-  scale_x_continuous(limits = c(0, 250), breaks = seq(0, 50, 250)) +
-  scale_y_continuous(breaks = seq(0, 750, 50))+
-  ylim(0, 750)+
-  xlim(1, 250)+
-  xlab('Number of Investors') + 
-  ylab('count') +
-  ggtitle('Number of Investors per Loan')
+
+ggplot(aes(x = Investors), data = loans_filtered) +
+    geom_histogram(binwidth=1) + 
+    xlim(1, 250) +
+    ylim(0, 1500) +
+    xlab('Number of Investors') + 
+    ylab('count') +
+    ggtitle('Number of Investors per Loan')
 ```
 
-The majority of the Investors is just one person. In the plot above, we limit the number of loans given to 760 in order to get a better picture of loans given by more then one investor.  
+Now we are going to transform this plot using the scale_y_log10 function to have a better handling for the outliers.  
+
+```{r, echo=FALSE, Univariate_Plots_13, message=FALSE, warning=FALSE}
+ggplot(aes(x = Investors), data = loans_filtered) +
+    geom_histogram(binwidth=1) + 
+    xlim(1, 250) +
+    scale_y_log10(limits=c(1, 1500), 
+                  breaks = c(1, 5, 10, 25, 50, 100, 200, 500, 1000, 1500))+
+    xlab('Number of Investors') + 
+    ylab('count') +
+    ggtitle('Number of Investors per Loan - scale_y_log10')
+```
 
 # Univariate Analysis
 
 ### Structure of the dataset
 This data set contains 113,937 loans with 82 variables on each loan.
-Including loan amount, borrower rate (or interest rate), current loan status, borrower income, borrower employment status, borrower credit history, and the latest payment information.
+Including loan amount, borrower rate (or interest rate), current loan status,
+borrower income, borrower employment status, borrower credit history, and the 
+latest payment information.
 The explanation of the variables can be found there: https://www.prosper.com/Downloads/Services/Documentation/ProsperDataExport_Details.html
 
 ### Main features of interest in the dataset
-We want to know how much money is needed, when and why. So the most important variables are 'OriginalLoanAmount', 'LoanOriginationDate' and 'Category'.
-We think it is also interesting to see if there is a difference in loan taking between home owners and non home owners. 
-Then we are also interested to see if the credit grade and the prosper score are related to other variables.
+We want to know how much money is needed, when and why. So the most important
+variables are 'OriginalLoanAmount', 'LoanOriginationDate' and 'Category'.
+We think it is also interesting to see if there is a difference in loan taking
+between home owners and non home owners. 
+Then we are also interested to see if the credit grade and the prosper score are
+related to other variables.
 
 ### More features
-Another point of interest is the lender yield. And we are alos curious about the fees that the company takes.
+Another point of interest is the lender yield. And we are alos curious about the
+fees that the company takes.
 
 ### New variables
-To provide a better readability we created the variable "Category", where we mapped the categories to the numbers of the 'ListingCategory..numeric'.
-We also created a new variable named 'GroupedOccupation'. Because the original variable 'Occupation' consits of 68 levels, we wanted to group those to get a better overview. The new variable consits of 8 levels representing our occupational groups.
+To provide a better readability we created the variable "Category", where we
+mapped the categories to the numbers of the 'ListingCategory..numeric'.
+We also created a new variable named 'GroupedOccupation'. Because the original
+variable 'Occupation' consits of 68 levels, we wanted to group those to get a
+better overview. The new variable consits of 8 levels representing our
+occupational groups.
 
 ### Changed variables
-In the LoanOriginalAmount variable we perforemed an outlier check and removed those values in order to make the following analysis more robust.
+In the LoanOriginalAmount variable we perforemed an outlier check and removed
+those values in order to make the following analysis more robust.
 
 
 # Bivariate Plots Section
 
 No we want to take a look at the home owners.
-In the next step we want to proof that people who aren t home owners need more often small loans for vacation, home improvement or household expenses than home owners. Our suggestion that house owners need less loans, seem to be wrong. Almost half the amount of borrowers are house owners.
-We limit the loan amount to a smaller range, because we want to know if house owners also need smaller loans, for home improvments or others.
+In the next step we want to proof that people who aren t home owners need more
+often small loans for vacation, home improvement or household expenses than home
+owners. Our suggestion that house owners need less loans, seem to be wrong.
+Almost half the amount of borrowers are house owners.
+We limit the loan amount to a smaller range, because we want to know if house
+owners also need smaller loans, for home improvments or others.
 
 ```{r, echo=FALSE, Bivariate_Plots_1, message=FALSE, warning=FALSE}
-  qplot(x = IsBorrowerHomeowner, y = LoanOriginalAmount,
-        data = loans_filtered, geom = 'boxplot') +
-   scale_y_continuous(limits = c(1000, 20000)) +
-   ggtitle('Home owner by limited loan original amount')
+qplot(x = IsBorrowerHomeowner, y = LoanOriginalAmount,
+      data = loans_filtered, geom = 'boxplot') +
+  scale_y_continuous(limits = c(1000, 20000)) +
+  xlab('Home Owner') +
+  ylab('Loan Original Amount (USD)') +
+  ggtitle('Home owner by limited loan original amount')
 ```
 
-In the plot above we can see that house owners need bigger amounts of money than non house owners.
+In the plot above we can see that house owners need bigger amounts of money than
+non house owners.
 
-Next we want to see, if there is a relation between the prosper rate and the fact that the borrower is a house owner. Normally a house owner has a better rating, due to more financial security.
+Next we want to see, if there is a relation between the prosper rate and the
+fact that the borrower is a house owner. Normally a house owner has a better
+rating, due to more financial security.
 
 ```{r, echo=FALSE, Bivariate_Plots_2, message=FALSE, warning=FALSE}
- ggplot(aes(factor(IsBorrowerHomeowner), 
-            ProsperScore), 
-        data = loans_filtered) +
+ggplot(aes(factor(IsBorrowerHomeowner), 
+           ProsperScore), 
+       data = loans_filtered) +
   geom_jitter( alpha = .3)  +
   geom_boxplot( alpha = .5,color = '#02ccba')+
   stat_summary(fun.y = 'mean', 
@@ -347,31 +443,36 @@ Next we want to see, if there is a relation between the prosper rate and the fac
                color = '#24323e', 
                shape = 8, 
                size = 4)+
+  ylab('Prosper Score') +
+  xlab('Home Owner') +
   ggtitle('Home owner by prosper score')
 ```
 
-Another surprise here. The Prosper score for non home owners is just a little bit lower. 
+Another surprise here. The Prosper score for non home owners is just a little
+bit lower. 
 
 ```{r, echo=FALSE, Bivariate_Plots_3, message=FALSE, warning=FALSE}
-summary(loans_filtered$MonthlyLoanPayment)
-ggplot(aes(x=CurrentDelinquencies, y=..count../sum(..count..)), data = subset(loans_filtered, !is.na(IsBorrowerHomeowner))) +
+ggplot(aes(x=CurrentDelinquencies, y=..count../sum(..count..)), 
+       data = subset(loans_filtered, !is.na(IsBorrowerHomeowner))) +
   geom_freqpoly(aes(color = IsBorrowerHomeowner)) + 
-  xlab('CurrentDelinquencies') + 
+  xlab('Current Delinquencies') + 
   ylab('Percentage of Borrowers with current delinquencies') +
   ggtitle('Current delinquencies by home owner')
 ```
 
-In the plot above we can not notice any difference between home owners and non home owners in current delinquencies.
+In the plot above we can not notice any difference between home owners and non
+home owners in current delinquencies.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-#-----------------create a new DF with info about the prosper rating and the amount
+#create a new DF with info about the prosper rating and the amount--------
+"Credits By Prosper Rating:"
 creditsByGrade <- group_by(loans, ProsperRating..numeric.)
 creditsByGrade <- summarise(creditsByGrade,
-    mean_amount = mean(LoanOriginalAmount), 
-    median_amount = median(LoanOriginalAmount),
-    min_amount = min(LoanOriginalAmount),
-    max_amount = max(LoanOriginalAmount),
-    n = n()) 
+                            mean_amount = mean(LoanOriginalAmount), 
+                            median_amount = median(LoanOriginalAmount),
+                            min_amount = min(LoanOriginalAmount),
+                            max_amount = max(LoanOriginalAmount),
+                            n = n()) 
 
 creditsByGrade
 ```
@@ -380,48 +481,65 @@ creditsByGrade
 ggplot(aes(x=BorrowerRate, y=ProsperScore), data = loans_filtered)+
   geom_point(alpha = 1/5, colour = '#02ccba')+
   geom_smooth()+
+  xlab('Borrower Rate') +
+  ylab('Prosper Score') +
   ggtitle("Line Plot of borrower rate and prosper score")
 ```
 
 No surprises here, the better the Prosper Score, the better the borrower rate.
 
 We suggest that the prosper rating is better if the income is verifiable.
+
 ```{r, echo=FALSE, Bivariate_Plots_5, message=FALSE, warning=FALSE}
-ggplot(aes(x = ProsperRating..numeric., y = ..count../sum(..count..)), data = subset(loans_filtered, !is.na(IncomeVerifiable))) +
+ggplot(aes(x = ProsperRating..numeric., y = ..count../sum(..count..)), 
+       data = subset(loans_filtered, !is.na(IncomeVerifiable))) +
   geom_freqpoly(aes(color=IncomeVerifiable)) + 
   xlab('Prosper Rating') + 
   ylab('Percentage of Borrowers with that Prosper Rating')+
   ggtitle("Prosper rating in percent by verifiable income")
 ```
+
 Yes, our suggestion is right.
 
 ```{r, echo=FALSE, Bivariate_Plots_6, message=FALSE, warning=FALSE}
-    qplot(x=CreditGrade, y=DelinquenciesLast7Years,
-        data=loans_filtered, geom='boxplot')+
-    ylim(0, 25) +
+qplot(x=CreditGrade, y=DelinquenciesLast7Years,
+      data=loans_filtered, geom='boxplot')+
+  ylim(0, 25) +
+  xlab('Credit Grade') +
+  ylab('Delinquencies in the last 7 years') +
   ggtitle('Current delinquencies by credit grade')
 ```
 
 As we can see in the plot above, the better the credit grade, less delinquenices.
 
 ```{r, echo=FALSE, Bivariate_Plots_7, message=FALSE, warning=FALSE}
-ggplot(data=subset(loans_filtered, CreditGrade != 'NC' & CreditGrade != ''  & !is.na(CreditGrade) & !is.na(EmploymentStatus) & EmploymentStatus != 'Not Available' & EmploymentStatus != 'Other' & EmploymentStatus != '')
-  ,aes(x=CreditGrade, y=EmploymentStatus, fill=EmploymentStatus)) + 
+ggplot(data=subset(loans_filtered, CreditGrade != 'NC' & CreditGrade != '' 
+                   & !is.na(CreditGrade) & !is.na(EmploymentStatus) 
+                   & EmploymentStatus != 'Not Available'
+                   & EmploymentStatus != 'Other' & EmploymentStatus != '')
+       ,aes(x=CreditGrade, y=EmploymentStatus, fill=EmploymentStatus)) + 
   geom_bar(stat="identity") +
   xlab("Credit grade") +
-  ylab("Employment status") +
+  ylab("Employment status") + 
+theme(axis.text.y=element_blank(),
+        axis.ticks.y=element_blank()) +
   ggtitle('Credit grade by employment status')
 ```
 
-The majority of the loan takers are full time employees. The worse the credit grade gets the more likely the employment status is "not available". We exclude missing data in our plot, to get a good picture.
+The majority of the loan takers are full time employees. The worse the credit
+grade gets the more likely the employment status is "not available". We exclude
+missing data in our plot, to get a good picture.
 
 We suggest that there is a higher lender yield, if the borrower rate is higher.
+
 ```{r, echo=FALSE, Bivariate_Plots_8, message=FALSE, warning=FALSE}
 ggplot(loans, aes(x = LenderYield, y = BorrowerRate)) +
   geom_point(alpha = 1/20, colour = '#02ccba') +
   scale_x_continuous(limits = c(0, quantile(loans$LenderYield, 0.75))) +
   scale_y_continuous( 
-                     limits = c(0 , quantile(loans$BorrowerRate, 0.75))) +
+  limits = c(0 , quantile(loans$BorrowerRate, 0.75))) + 
+  xlab('Lender Yield') +
+  ylab('Borrower Rate') +
   ggtitle('Lender yield and borrower rate')
 ```
 
@@ -429,48 +547,60 @@ Yes, we can see clearly the higher the borrower rate, the higher the lender yiel
 
 # Bivariate Analysis
 
-We found out that there is almost no difference between home owners and non home owners by prosper score and delinquencies. There is a slight difference as home owners tend to need bigger loans.
+We found out that there is almost no difference between home owners and non home
+owners by prosper score and delinquencies. There is a slight difference as home owners tend to need bigger loans.
 
 The prosper rating is better if the income is verifiable. 
 The worse the credit grade the more often occured delinquencies in the last 7 years.
 
-We notice a strong relation between the lender yield and the borrower rate. The higher the borrower rate, the better the lender yield.
+We notice a strong relation between the lender yield and the borrower rate. The
+higher the borrower rate, the better the lender yield.
 
 # Multivariate Plots Section
 
 ```{r, echo=FALSE, Multivariate_Plots_1, message=FALSE, warning=FALSE}
 # Convert date to year ---------------------------
-loans_filtered$LoanOriginationYear <- format(as.Date(loans_filtered$LoanOriginationDate, format="%Y-%m-%d"),"%Y")
+loans_filtered$LoanOriginationYear <- 
+  format(as.Date(loans_filtered$LoanOriginationDate, format="%Y-%m-%d"),"%Y")
 
 ggplot(aes(x = LoanOriginationYear, 
            y = LoanOriginalAmount, 
            fill = factor(Term)),
-        data = loans_filtered) +
-        geom_boxplot()+
-        ggtitle("Loans by Year") +
-        labs(x = "Loan origination year", y = "Loan original amount")
+       data = loans_filtered) +
+  geom_boxplot()+
+  ggtitle("Loans by Year") +
+  labs(x = "Loan origination year", y = "Loan Original Amount (USD)")
 ```
 
-In the plot above we can see that from 2006 to 2010 the loans where taken for 36 month. Maybe back than this was the only term available. From 2010 on if the loan amount was higher borrowers selected the 60 month term. In 2011 the loans increased a lot.
+In the plot above we can see that from 2006 to 2010 the loans where taken for 36
+month. Maybe back than this was the only term available. From 2010 on if the loan
+amount was higher borrowers selected the 60 month term. In 2011 the loans
+increased a lot.
 
 ```{r, echo=FALSE, Multivariate_Plots_2, message=FALSE, warning=FALSE}
 ggplot(aes(x= factor(GroupedOccupation), 
            y= LoanOriginalAmount, 
            fill =IsBorrowerHomeowner), 
-        data = subset(loans_filtered, !is.na(GroupedOccupation) & (GroupedOccupation != 'Other'))) +
-        theme(axis.text.x = element_text(angle=45,hjust=0.5,vjust=0.5))+
-   geom_boxplot( alpha = .5 ) +
+       data = subset(loans_filtered,
+                     !is.na(GroupedOccupation)
+                     & (GroupedOccupation != 'Other'))) +
+  theme(axis.text.x = element_text(angle=45,hjust=0.5,vjust=0.5))+
+  geom_boxplot( alpha = .5 ) +
+  labs(x = "Grouped Occupation", y = "Loan Original Amount (USD)") +
   ggtitle("Loan amount by grouped occupation and homeowner status")
 ```
 
-In the factor plot above, we can see that students need the smaller amounts of money. The higher the loan gets, the more homeowners are the borrowers.
+In the factor plot above, we can see that students need the smaller amounts of
+money. The higher the loan gets, the more homeowners are the borrowers.
 
 ```{r, echo=FALSE, Multivariate_Plots_3, message=FALSE, warning=FALSE}
 ggplot(aes(x = LoanOriginalAmount, fill = LoanStatus), data = loans_filtered) +
-    facet_wrap(~Term) +
-    geom_histogram(aes(color = LoanStatus)) +
-    scale_fill_brewer(type = 'qual') +
-    ggtitle("Histogram of loan Amounts by status and terms")
+  facet_wrap(~Term) +
+  geom_histogram(aes(color = LoanStatus)) +
+  scale_fill_brewer(type = 'qual') +
+  theme(axis.text.x = element_text(angle=45,hjust=0.5,vjust=0.5)) +
+  labs(x = "Loan Original Amount (USD)") +
+  ggtitle("Histogram of loan Amounts by status and terms")
 ```
 
 In the plot above we can see that most of the loans are mid-term. 
@@ -479,20 +609,24 @@ In the plot above we can see that most of the loans are mid-term.
 ggplot(aes(x = BorrowerRate, y = Investors), data=loans_filtered) + 
   geom_point(aes(color=LenderYield))+
   ylim(0, 600)+
+   labs(x = 'Borrower Rate') +
   ggtitle('Lender yield by number of investors')
 ```
 
-In the plot above we can see quite well, that the investors yield gets higher the higher the borrower rate gets.
+In the plot above we can see quite well, that the investors yield gets higher
+the higher the borrower rate gets.
 
 ```{r echo=FALSE, Multivariate_Plots_5, message=FALSE, warning=FALSE}
 ggplot(aes(x = Term, y = LoanOriginalAmount), data = loans_filtered) +
-    facet_wrap(~GroupedOccupation) +
-    geom_point(aes(color = Category)) +
-    scale_y_continuous(limits = c(1000, 5000)) + 
+  facet_wrap(~GroupedOccupation) +
+  geom_point(aes(color = Category)) +
+  scale_y_continuous(limits = c(1000, 5000)) + 
+  labs(x="Term in Months", y = "Loan Original Amount (USD)") +
   ggtitle('Loan amount by term, grouped by grouped occupation and category')
 ```
 
-The plot above gives us a nice overview. As we can see most of the loans are mid term loans with a duration of 36 month. The usages of the loans are well mixed. 
+The plot above gives us a nice overview. As we can see most of the loans are mid 
+term loans with a duration of 36 month. The usages of the loans are well mixed. 
 
 ```{r echo=FALSE, Multivariate_Plots_6, message=FALSE, warning=FALSE}
 ggplot(aes(EstimatedReturn, EstimatedLoss), 
@@ -500,34 +634,39 @@ ggplot(aes(EstimatedReturn, EstimatedLoss),
                    & !is.na(GroupedOccupation)
                    & !is.na(IncomeRange)
                    & IncomeRange != 'Not displayed'
-                  & IncomeRange != 'Not employed'))+
+                   & IncomeRange != 'Not employed'))+
   geom_point(aes(size=IncomeRange, colour=GroupedOccupation))+
+  labs(x="Estimated Return", y = "Estimated Loss") +
   ggtitle('Estimated loss and estimated return by income range of borrower')
 ```
 
-The plot above gives an overview of the estimated return and estimated loss by grouped occupation and income range. As there is to much information in the plot, we hardly can see anything. So we are going to split this into two plots.
+The plot above gives an overview of the estimated return and estimated loss by 
+grouped occupation and income range. As there is to much information in the plot,
+we hardly can see anything. So we are going to split this into two plots.
 
 ```{r echo=FALSE, Multivariate_Plots_7, message=FALSE, warning=FALSE}
 plot1 <- ggplot(aes(EstimatedReturn, EstimatedLoss), 
-       data=subset(loans_filtered, GroupedOccupation != 'Other' 
-                   & !is.na(GroupedOccupation)
-                   & !is.na(IncomeRange)
-                   & IncomeRange != 'Not displayed'
-                  & IncomeRange != 'Not employed'))+
+                data=subset(loans_filtered, GroupedOccupation != 'Other' 
+                            & !is.na(GroupedOccupation)
+                            & !is.na(IncomeRange)
+                            & IncomeRange != 'Not displayed'
+                            & IncomeRange != 'Not employed'))+
   geom_point(aes(colour=GroupedOccupation))+
-  ggtitle('Estimated loss and estimated return by grouped occupation')
+  labs(x="Estimated Return", y = "Estimated Loss")
+
 plot2 <-  ggplot(aes(EstimatedReturn, EstimatedLoss), 
-       data=subset(loans_filtered, GroupedOccupation != 'Other' 
-                   & !is.na(GroupedOccupation)
-                   & !is.na(IncomeRange)
-                   & IncomeRange != 'Not displayed'
-                  & IncomeRange != 'Not employed'))+
+                 data=subset(loans_filtered, GroupedOccupation != 'Other' 
+                             & !is.na(GroupedOccupation)
+                             & !is.na(IncomeRange)
+                             & IncomeRange != 'Not displayed'
+                             & IncomeRange != 'Not employed'))+
   geom_point(aes(colour=IncomeRange))+
-  ggtitle('Estimated loss and estimated return by income range of borrower')
+  labs(x="Estimated Return", y = "Estimated Loss")
 grid.arrange(plot1, plot2, ncol=2)
 ```
 
-The plots above are still not readable. So in the next plot we want to focus on on specific occupation group and the estimated losses and returns.
+The plots above are still not readable. So in the next plot we want to focus 
+on specific occupation group and the estimated losses and returns.
 
 ```{r echo=FALSE, Multivariate_Plots_8, message=FALSE, warning=FALSE}
 ggplot(aes(EstimatedReturn, EstimatedLoss), 
@@ -535,8 +674,9 @@ ggplot(aes(EstimatedReturn, EstimatedLoss),
                    & !is.na(GroupedOccupation)
                    & !is.na(IncomeRange)
                    & IncomeRange != 'Not displayed'
-                  & IncomeRange != 'Not employed'))+
+                   & IncomeRange != 'Not employed'))+
   geom_point(aes(colour=IncomeRange, size=IncomeRange))+
+  labs(x="Estimated Return", y = "Estimated Loss") +
   ggtitle('Estimated loss and estimated return by income range of students')
 ```
 
@@ -544,7 +684,8 @@ ggplot(aes(EstimatedReturn, EstimatedLoss),
 ggplot(loans_filtered, aes(LP_CustomerPayments, LP_InterestandFees)) +
   geom_point(aes(colour =LP_ServiceFees), size = 1) +
   coord_equal()+
-  ggtitle('LP_InterestandFees and LP_CustomerPayments by LP_ServiceFees')
+  labs(x = "Customer Payments", y = "Interestand Fees") +
+  ggtitle('Interestand Fees and Customer Payments by LP_ServiceFees')
 ```
 
 This plot shows that the lower the customer payments are the lower the service fees and interest fees are.
@@ -552,20 +693,38 @@ This plot shows that the lower the customer payments are the lower the service f
 ```{r echo=FALSE, Multivariate_Plots_10, message=FALSE, warning=FALSE}
 ggplot(data = loans_filtered, aes(x = Category, y = GroupedOccupation)) +
   geom_tile(aes(fill = LoanOriginalAmount)) +
-        theme(axis.text.x=element_text(angle=60,hjust=1,vjust=0.9)) +
+  theme(axis.text.x=element_text(angle=60,hjust=1,vjust=0.9)) +
+  labs(y = "Grouped Occupation") +
   ggtitle('Loans by Occupation and Category')
 ```
-In the plot above we get an overview of the loans by category and grouped occupation. It is quite hard to find a pattern on the first sight, so maybe a normal list would have done a better job.
+
+In the plot above we get an overview of the loans by category and grouped
+occupation. It is quite hard to find a pattern on the first sight, so maybe
+a normal list would have done a better job.
 
 # Multivariate Analysis
+
 ### Estimated loss and estimated return by income range and grouped occupation
-We ploted an overview of the estimated return and the estimated loss by grouped occupation and income range. Because the plot was to dense and unreadable, we split it up into two plots. One for the income range and one for the occupation group. But this plot is not very readable either. So we focused on one occupationl group - the students. This plot is well readable. And it was quite surprising that there is one outlier with a negative estimated return and a really high estimated loss. 
+We ploted an overview of the estimated return and the estimated loss by grouped
+occupation and income range. Because the plot was to dense and unreadable, we
+split it up into two plots. One for the income range and one for the occupation
+group. But this plot is not very readable either. So we focused on one
+occupationl group - the students. This plot is well readable. And it was quite
+surprising that there is one outlier with a negative estimated return and a
+really high estimated loss. 
+
 ### Heatmap of grouped occupation and category by loan original amount
-It was expected that this heatmap gives a nive overview of the occupations and categories. We were hoping to find patterns with one look. But this is not the case, you have to elaborate this plot. Maybe it would have been better to provide a list in this case.
+It was expected that this heatmap gives a nive overview of the occupations
+and categories. We were hoping to find patterns with one look. But this is not 
+the case, you have to elaborate this plot. Maybe it would have been better to
+provide a list in this case.
+
 ### Loans and Fees
-From 2006 to 2010 the loans where taken for 36 month. Maybe back than this was the only term available. From 2010 on if the loan amount was higher borrowers selected the 60 month term. In 2011 the loans increased a lot.
-We found out that the lower the customer payments are the lower the service fees and interest fees are.
-Which is not a surprise.
+From 2006 to 2010 the loans where taken for 36 month. Maybe back than this was 
+the only term available. From 2010 on if the loan amount was higher borrowers 
+selected the 60 month term. In 2011 the loans increased a lot.
+We found out that the lower the customer payments are the lower the service 
+fees and interest fees are.Which is not a surprise.
 
 # Final Plots and Summary
 
@@ -575,30 +734,41 @@ Which is not a surprise.
 ggplot(aes(x= factor(GroupedOccupation), 
            y= LoanOriginalAmount, 
            fill =IsBorrowerHomeowner), 
-        data = subset(loans_filtered, !is.na(GroupedOccupation) & (GroupedOccupation != 'Other'))) +
-        theme(axis.text.x = element_text(angle=45,hjust=0.5,vjust=0.5))+
-   geom_boxplot( alpha = 0.5 )
+       data = subset(loans_filtered,
+                     !is.na(GroupedOccupation)
+                     & (GroupedOccupation != 'Other'))) +
+  labs(x = "Grouped Occupation", y = "Loan Original Amount (USD)") +
+  theme(axis.text.x = element_text(angle=45,hjust=0.5,vjust=0.5))+
+  geom_boxplot( alpha = 0.5 )
 ```
 
 ### Description
-In the factor plot above, we can see that students need the smaller amounts of money. Surprisingly there are a lot of home owners in the group student. The higher the loan gets, the more homeowners are the borrowers.
-In some occupational groups there are a lot more home owners. This may be caused by our occupational grouping, which contains professions with a wide income range. For example in the group 'Medical_Health', there are doctors and nurses etc.
+In the factor plot above, we can see that students need the smaller amounts of 
+money. Surprisingly there are a lot of home owners in the group student. The
+higher the loan gets, the more homeowners are the borrowers.
+In some occupational groups there are a lot more home owners. This may be caused
+by our occupational grouping, which contains professions with a wide income 
+range. For example in the group 'Medical_Health', there are doctors and nurses etc.
 
 ### Histogram of loan amounts by term and loan status
 
 ```{r echo=FALSE, Final_Plot_2, message=FALSE, warning=FALSE}
 ggplot(aes(x = LoanOriginalAmount, fill = LoanStatus), data = loans_filtered) +
-    facet_wrap(~Term) +
-    geom_histogram(aes(color = LoanStatus)) +
-    scale_fill_brewer(type = 'qual') +
-    theme(axis.text.x = element_text(angle=45,hjust=0.5,vjust=0.5))+
-
-    ggtitle("Histogram of loan Amounts by status and terms")
+  facet_wrap(~Term) +
+  geom_histogram(aes(color = LoanStatus)) +
+  scale_fill_brewer(type = 'qual') +
+  theme(axis.text.x = element_text(angle=45,hjust=0.5,vjust=0.5))+
+  labs(x = "Loan Original Amount (USD)") +
+  ggtitle("Histogram of loan Amounts by status and terms")
 ```
 
 ###Description
-In the plot above we can see that most of the plots are taken with a terma of 36 month. Even though the amounts are not that big. This may be because until 2009 there where only loans with a term of 36 month. This may also explain why the loan status is completed or charged off for the most of the loans under 5000. We can also see that short term loans are not often used at the moment. People prefer mid or long term loans. 
-
+In the plot above we can see that most of the plots are taken with a terma of 36
+month. Even though the amounts are not that big. This may be because until 2009
+there where only loans with a term of 36 month. This may also explain why the 
+loan status is completed or charged off for the most of the loans under 5000. 
+We can also see that short term loans are not often used at the moment. 
+People prefer mid or long term loans. 
 
 ### Estimated return and estimated loss for students
 
@@ -608,21 +778,35 @@ ggplot(aes(EstimatedReturn, EstimatedLoss),
                    & !is.na(GroupedOccupation)
                    & !is.na(IncomeRange)
                    & IncomeRange != 'Not displayed'
-                  & IncomeRange != 'Not employed'))+
-  geom_point(aes(colour=IncomeRange, size=IncomeRange))+
+                   & IncomeRange != 'Not employed')) +
+  geom_point(aes(colour=IncomeRange, size=IncomeRange)) +
+  labs(x = "Estimated Return", y = "Estimated Loss") +
   ggtitle('Estimated loss and estimated return by income range of students')
-
-
 ```
 
 ###Description
-We can see that most of the students earn between $1- 24,999. There are some students that a earn more than $75,000. 
-There are some outliers where the estimated loss is higher than the estimated return. The majority of the estimated returns and estimated losses are betw depending on the income range of a student are between 0.05 and 0.15. Surprisingly there is one outlier with a negative estimated return and a really high estimated loss. 
+We can see that most of the students earn between $1- 24,999. There are some 
+students that a earn more than $75,000. 
+There are some outliers where the estimated loss is higher than the estimated 
+return. The majority of the estimated returns and estimated losses are between
+0.05 and 0.15. Surprisingly there is one outlier with a negative estimated
+return and a really high estimated loss. 
 
 ##Summary
-Because of the big amount of variables it took some time, to read through the explanations of the prosper loan data. To get started we explored some different variables. 
-In order to get nice plots, we had to convert some values. For example the origin date to year, the numeric categories into readable categories and the job duration months where summarized in buckets
-It was interresting to see that from 2011 on borrowers needed higher loans with longer terms. 
-It was quite a surprise that there is no big difference between home owners and non home owners, because we suggested that home owners are financially more strong and don't need small loans. 
-For the other variables I could not find a lot of surprising facts. For example the worse the credit grade is, the higher the delinquencies in the last 7 years are or that the lender yield gets lower the higher the numbe of investors get.
-It would be nice if there were not big groups like 'na' or 'other' in the occupation and category group. Maybe there could be also data about the age and gender of the borrower provided, which may lead to interesting findings.
+Because of the big amount of variables it took some time, to read through the
+explanations of the prosper loan data. To get started we explored some different
+variables. 
+In order to get nice plots, we had to convert some values. For example the origin
+date to year, the numeric categories into readable categories and the job duration
+months where summarized in buckets
+It was interresting to see that from 2011 on borrowers needed higher loans with 
+longer terms. 
+It was quite a surprise that there is no big difference between home owners and 
+non home owners, because we suggested that home owners are financially more
+strong and don't need small loans. 
+For the other variables I could not find a lot of surprising facts. For example 
+the worse the credit grade is, the higher the delinquencies in the last 7 years 
+are or that the lender yield gets lower the higher the numbe of investors get.
+It would be nice if there were not big groups like 'na' or 'other' in the 
+occupation and category group. Maybe there could be also data about the age and 
+gender of the borrower provided, which may lead to interesting findings.
