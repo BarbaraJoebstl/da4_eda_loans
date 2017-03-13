@@ -16,7 +16,7 @@ The projects includes the following sections:
 - Summary
 
 ##Run
-You can run the .rmd file with [RStudio](https://www.rstudio.com/).
+You can run the .rmd file with [RStudio](https://www.rstudio.com/) or simply take a look at the output [here](http://tschebee.net/eda-for-loan-data/).
 
 ##Data
 The dataset used in this project is included as prosperLoanData.csv. 
