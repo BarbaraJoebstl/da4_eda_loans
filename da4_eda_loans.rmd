@@ -1,8 +1,12 @@
 ---
 title: "Exploratory Data Analysis for Loan Data"
 author: "Barbara Joebstl"
-date: "12 March 2017"
-output: html_document
+date: "March, 12 2017"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
 ---
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, packages}
