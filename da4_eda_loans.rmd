@@ -2,17 +2,34 @@
 title: "Exploratory Data Analysis for Loan Data"
 author: "Barbara Joebstl"
 date: "March, 12 2017"
-output: 
+output:
+  word_document:
+    toc: yes
+    toc_depth: '3'
   html_document:
-    toc: true
+    toc: yes
     toc_depth: 3
-    toc_float: true
+    toc_float: yes
 ---
+
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, packages}
 library(ggplot2)
 library(gridExtra)
 library(dplyr)
+
+
+if (!require('RWordPress')) {
+devtools::install_github(c("duncantl/XMLRPC", "duncantl/RWordPress"))
+}
+
+library(RWordPress)
+options(WordpressLogin = c(tschebee="kvzE1krkFNpv6AzNzNiC18eJ"),
+WordpressURL = 'https://tschebee.net/xmlrpc.php')
+library(knitr)
+knit2wp('da4_eda_loans.rmd', title = 'EDA for Loan Data', publish = TRUE, upload = TRUE)
+
+
 ```
 
 
